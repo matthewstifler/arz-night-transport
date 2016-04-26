@@ -25,4 +25,15 @@ colnames(busstops.sp.ll@coords) = c("long", "lat")
 london.shp = readOGR("./borough/", "London_Borough_Excluding_MHW")
 london.shp = spTransform(london.shp, CRS(latlong))
 # run ingress snippet (might fire back!) for id'ing in which shape what lies
+stops.by.borough = over(london.shp, busstops.sp.ll, returnList = TRUE)
+borough.list = c("Kingston", "Croydon", "Bromley", "Hounslow", "Ealing", 
+                 "Havering", "Hillingdon", "Harrow", "Brent", "Barnet", "Lambeth",
+                 "Southwark", "Lewisham", "Greenwich", "Bexley", "Enfield", "Waltham Forest",
+                 "Redbridge", "Sutton", "Richmond", "Merton", "Wandsworth", "Hammersmith and Fulham",
+                 "Kensington & Chelsea", "Westminster", "Kamden", "Tower Hamlets", "Hackney",
+                 "Islington", "Haringey", "Newham", "Barking", "City")
+n.of.stops = as.numeric()
+for (i in 1:length(stops.by.borough)) {
+  n.of.stops[i] = stops.by.borough[[i]] %>% nrow
+}
 # get n of stations for each ward
