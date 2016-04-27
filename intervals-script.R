@@ -2,6 +2,7 @@ require(dplyr)
 require(rvest)
 require(stringr)
 require(gdata)
+require(maptools)
 ###getting bus intervals
 #night:
 #parse from wiki by this tutorial http://www.r-bloggers.com/using-rvest-to-scrape-an-html-table/
@@ -33,8 +34,8 @@ bus.24.df = rbind(bus.24.df, data.frame(X6 = "6", X =13))
 bus.24.df$X[1:17] = intervals.24[1:17]
 colnames(bus.24.df) = c("bus","interval")
 bus.24.df$times = round(360 / bus.24.df$interval)
-journey.counter = as.numeric(rep(0, 32))
-for (i in 1:nrow(buses.24)) { #nested 'for' loops, baaaaad
+journey.counter = as.numeric(rep(0, 33))
+for (i in 1:33) { #nested 'for' loops, baaaaad
   for (j in 1:nrow(bus.24.df)){
     journey.counter[i] = journey.counter[i] + ifelse(as.character(bus.24.df$bus[j]) %in% buses.24$buses[[i]], bus.24.df$times[j], 0)
   }
@@ -44,3 +45,9 @@ buses.24$satur.no.stops = journey.counter / main.df$Площадь..км.2
 buses.24$satur.stops = (journey.counter * main.df$Кол.во.остановок)/ main.df$Площадь..км.2
 ggplot(aes(x = reorder(name, satur.stops), y = satur.stops), data = buses.24) + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ggplot(aes(x = reorder(name, -satur.no.stops), y = satur.no.stops), data = buses.24) + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#buses.24 = rbind(buses.24, data.frame(name = "City", buses = 0, journeys = 0, satur.no.stops = 0, satur.stops = 0)) watch out, there was no city in the beginning
+buses.24.sorted.by.shp = buses.24[order(match(buses.24$name,london.shp@data$NAME)),]
+london.shp@data$saturation = buses.24.sorted.by.shp$satur.stops * 0.15 #0.15 bc arz asked me so
+plot.df = fortify(london.shp, region = "NAME")
+plot.df = sp::merge(plot.df, london.shp@data, by.x = "id", by.y = "NAME")
+ggmap(map) + geom_polygon(aes(x=long, y=lat, group=group, fill=log(saturation)), size=.2,color='black', data=plot.df, alpha=0.5)
